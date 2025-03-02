@@ -1,0 +1,58 @@
+services:
+  - type: web
+    name: laravel-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    buildCommand: ""
+    startCommand: "docker-compose up nginx"
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        value: your-app-key
+      - key: DB_CONNECTION
+        value: postgres
+      - key: DB_HOST
+        value: laravel-db
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: laravel
+      - key: DB_USERNAME
+        value: user
+      - key: DB_PASSWORD
+        value: secret
+
+  - type: db
+    name: laravel-db
+    plan: free
+    region: oregon
+    engine: postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: laravel
+      - key: POSTGRES_USER
+        value: user
+      - key: POSTGRES_PASSWORD
+        value: secret
+
+  - type: web
+    name: nginx-laravel
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    buildCommand: ""
+    startCommand: "docker-compose up nginx"
+    autoDeploy: true
+    envVars:
+      - key: NGINX_HOST
+        value: laravel-nginx
+      - key: NGINX_PORT
+        value: "8080"
+      - key: APP_URL
+        value: "http://localhost:8080"
+
