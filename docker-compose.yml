@@ -12,6 +12,36 @@ services:
       - db
     networks:
       - app_network
+    environment:
+      - APP_NAME=Laravel
+      - APP_ENV=local
+      - APP_KEY=your_generated_app_key
+      - APP_DEBUG=true
+      - APP_URL=http://localhost
+      - APP_LOCALE=en
+      - APP_FALLBACK_LOCALE=en
+      - APP_FAKER_LOCALE=en_US
+      - CACHE_STORE=file
+      - DB_CONNECTION=pgsql
+      - DB_HOST=dpg-cuvmn4fnoe9s73e61s70-a.oregon-postgres.render.com
+      - DB_PORT=5432
+      - DB_DATABASE=zievoback
+      - DB_USERNAME=zievoback_user
+      - DB_PASSWORD=ReGEdw5UdagdXE7Q9fuSH2XxQ73mTgSb
+      - REDIS_URL=null
+      - SESSION_DRIVER=file
+      - QUEUE_CONNECTION=sync
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=null
+      - MAIL_PORT=null
+      - MAIL_USERNAME=null
+      - MAIL_PASSWORD=null
+      - MAIL_ENCRYPTION=null
+      - AWS_ACCESS_KEY_ID=null
+      - AWS_SECRET_ACCESS_KEY=null
+      - AWS_DEFAULT_REGION=null
+      - AWS_BUCKET=null
+      - AWS_URL=null
 
   db:
     image: postgres:15
