@@ -100,25 +100,43 @@ class LivroController extends Controller
 
         return response()->json($livro);
     }
+
     // request de atualizar livro
     public function update(Request $request, $id)
     {
-        $livro = $this->requestService->getBookById($id);
+    $livro = $this->requestService->getBookById($id);
 
-        if (!$livro) {
-            return response()->json(['message' => 'Livro não encontrado'], 404);
-        }
-
-        $request->validate([
-            'titulo' => 'sometimes|string|max:255',
-            'autor' => 'sometimes|string|max:255',
-            'ano_publicacao' => 'sometimes|integer',
-        ]);
-
-        $this->requestService->updateBook($livro, $request->all());
-
-        return response()->json($livro);
+    if (!$livro) {
+        return response()->json(['message' => 'Livro não encontrado'], 404);
     }
+
+    // Validação dos dados
+    $request->validate([
+        'titulo' => 'sometimes|string|max:255',
+        'autor' => 'sometimes|string|max:255',
+        'ano_publicacao' => 'sometimes|integer',
+        'editora' => 'sometimes|string|max:255',
+        'isbn' => 'sometimes|string|max:255',
+        'genero' => 'sometimes|string|max:255',
+        'descricao' => 'sometimes|string',
+        'imagem' => 'sometimes|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
+
+    $imageUrl = $livro->imagem; 
+    if ($request->hasFile('imagem')) {
+        $file = $request->file('imagem');
+        $filename = 'images/' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        $imageUrl = $this->firebaseService->uploadImage($file, $filename);
+    }
+
+    $dados = $request->all();
+    $dados['imagem'] = $imageUrl; 
+
+    $this->requestService->updateBook($livro, $dados);
+
+    return response()->json($livro);
+    }
+    
     // request de deletar livro
     public function delete($id)
     {
