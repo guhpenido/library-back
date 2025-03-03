@@ -4,16 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Livro;
 use Illuminate\Http\Request;
+use App\Services\RequestService;
+use App\Services\FirebaseService;
+use Illuminate\Support\Str;
 
 class LivroController extends Controller
 {
-    //como esse é um projeto simples, realizei as operações aqui mesmo no Controller, mas o ideal é que essas operações sejam feitas em um Service
+    protected $requestService;
+    protected $firebaseService;
 
-    /*
-    * Como isso é apenas para um projeto, não estou utilizando validação profunda de Request, filtros, padronização de respostas, etc.
-    */
-
-    //esse método retorna os livros por paginacao
+    public function __construct(RequestService $requestService, FirebaseService $firebaseService)
+    {
+        $this->requestService = $requestService;
+        $this->firebaseService = $firebaseService;
+    }
+    // request de listagem de livros
     public function index(Request $request)
     {
         $request->validate([
@@ -23,11 +28,11 @@ class LivroController extends Controller
 
         $perPage = $request->query('limit', 10); 
         $page = $request->query('page', 1);
-        $livros = Livro::paginate($perPage, ['*'], 'page', $page);
+        $livros = $this->requestService->getBooks($perPage, $page);
         return response()->json($livros);
     }
 
-    //esse método cria um novo livro
+    // request de criacao de livro
     public function create(Request $request)
     {
         $request->validate([
@@ -38,17 +43,24 @@ class LivroController extends Controller
             'isbn' => 'sometimes|string|max:255',
             'genero' => 'sometimes|string|max:255',
             'descricao' => 'sometimes|string',
+            'imagem' => 'sometimes|string',
         ]);
 
-        $livro = Livro::create($request->all());
+        //se tiver img ele upa no firebase
+        if ($request->hasFile('imagem')) {
+            $file = $request->file('imagem');
+            $filename = 'images/' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $imageUrl = $this->firebaseService->uploadImage($file, $filename);
+            $request->merge(['imagem' => $imageUrl]);
+        }
 
+        $livro = $this->requestService->createBook($request->all());
         return response()->json($livro, 201);
     }
-    
-    //esse método cria multiplos livros
+
+    // request de criacao de varios livros
     public function createMultiple(Request $request)
     {
-        // Validação dos dados
         $validated = $request->validate([
             'livros' => 'required|array|min:1', 
             'livros.*.titulo' => 'required|string|max:255', 
@@ -58,21 +70,28 @@ class LivroController extends Controller
             'livros.*.isbn' => 'sometimes|string|max:255', 
             'livros.*.genero' => 'sometimes|string|max:255', 
             'livros.*.descricao' => 'sometimes|string', 
+            'livros.*.imagem' => 'sometimes|string',
         ]);
 
-        // Cria os livros em massa
+        // Criação dos livros em massa
         $livrosData = $validated['livros'];
-        $livros = Livro::insert($livrosData);  
 
+        foreach ($livrosData as &$livro) {
+            // se tiver imagem, envia para o Firebase
+            if (isset($livro['imagem'])) {
+                $file = $livro['imagem']; 
+                $filename = 'images/' . Str::random(10) . '.jpg'; 
+                $livro['imagem'] = $this->firebaseService->uploadImage($file, $filename);
+            }
+        }
 
-        // Retorna os livros criados como resposta
+        $livros = $this->requestService->createMultipleBooks($livrosData);
         return response()->json($livros, 201);
     }
-
-    //esse método retorna um livro específico
+    // request de leitura de livro
     public function read($id)
     {
-        $livro = Livro::find($id);
+        $livro = $this->requestService->getBookById($id);
 
         if (!$livro) {
             return response()->json(['message' => 'Livro não encontrado'], 404);
@@ -80,11 +99,10 @@ class LivroController extends Controller
 
         return response()->json($livro);
     }
-
-    //esse método atualiza um livro específico
+    // request de atualizar livro
     public function update(Request $request, $id)
     {
-        $livro = Livro::find($id);
+        $livro = $this->requestService->getBookById($id);
 
         if (!$livro) {
             return response()->json(['message' => 'Livro não encontrado'], 404);
@@ -96,21 +114,20 @@ class LivroController extends Controller
             'ano_publicacao' => 'sometimes|integer',
         ]);
 
-        $livro->update($request->all());
+        $this->requestService->updateBook($livro, $request->all());
 
         return response()->json($livro);
     }
-
-    //esse método deleta um livro específico
+    // request de deletar livro
     public function delete($id)
     {
-        $livro = Livro::find($id);
+        $livro = $this->requestService->getBookById($id);
 
         if (!$livro) {
             return response()->json(['message' => 'Livro não encontrado'], 404);
         }
 
-        $livro->delete();
+        $this->requestService->deleteBook($livro);
 
         return response()->json(['message' => 'Livro deletado com sucesso']);
     }

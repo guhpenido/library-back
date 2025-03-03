@@ -20,6 +20,7 @@ class Livro extends Model
         'ano_publicacao',
         'isbn',
         'genero',
-        'descricao'
+        'descricao',
+        'imagem'
     ];
 }
