@@ -51,10 +51,9 @@ class LivroController extends Controller
             $file = $request->file('imagem');
             $filename = 'images/' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             $imageUrl = $this->firebaseService->uploadImage($file, $filename);
-            dd($imageUrl);
-            $request->merge(['imagem' => $imageUrl]);
+            $request['imagem'] = $imageUrl;
         }
-
+        dd($request->all());
         $livro = $this->requestService->createBook($request->all());
         return response()->json($livro, 201);
     }
