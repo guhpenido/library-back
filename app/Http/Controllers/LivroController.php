@@ -13,10 +13,18 @@ class LivroController extends Controller
     * Como isso é apenas para um projeto, não estou utilizando validação profunda de Request, filtros, padronização de respostas, etc.
     */
 
-    //esse método retorna todos os livros
-    public function index()
+    //esse método retorna os livros por paginacao
+    public function index(Request $request)
     {
-        return response()->json(Livro::all());
+        $request->validate([
+            'limit' => 'sometimes|integer|min:1',
+            'page' => 'sometimes|integer|min:1',
+        ]);
+
+        $perPage = $request->query('limit', 10); 
+        $page = $request->query('page', 1);
+        $livros = Livro::paginate($perPage, ['*'], 'page', $page);
+        return response()->json($livros);
     }
 
     //esse método cria um novo livro
