@@ -43,7 +43,7 @@ class LivroController extends Controller
             'isbn' => 'sometimes|string|max:255',
             'genero' => 'sometimes|string|max:255',
             'descricao' => 'sometimes|string',
-            'imagem' => 'sometimes|string',
+            'imagem' => 'sometimes|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         //se tiver img ele upa no firebase
