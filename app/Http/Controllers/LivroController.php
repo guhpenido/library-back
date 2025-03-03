@@ -46,15 +46,16 @@ class LivroController extends Controller
             'imagem' => 'sometimes|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-
+        $imageUrl = "";
         if ($request->hasFile('imagem')) {
             $file = $request->file('imagem');
             $filename = 'images/' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             $imageUrl = $this->firebaseService->uploadImage($file, $filename);
-            $request['imagem'] = $imageUrl;
         }
-        dd($request->all());
-        $livro = $this->requestService->createBook($request->all());
+        
+        $dados = $request->all();
+        $dados['imagem'] = $imageUrl;
+        $livro = $this->requestService->createBook($request);
         return response()->json($livro, 201);
     }
 
