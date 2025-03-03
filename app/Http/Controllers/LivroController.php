@@ -46,11 +46,12 @@ class LivroController extends Controller
             'imagem' => 'sometimes|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        //se tiver img ele upa no firebase
+
         if ($request->hasFile('imagem')) {
             $file = $request->file('imagem');
             $filename = 'images/' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             $imageUrl = $this->firebaseService->uploadImage($file, $filename);
+            dd($imageUrl);
             $request->merge(['imagem' => $imageUrl]);
         }
 
